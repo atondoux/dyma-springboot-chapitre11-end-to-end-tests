@@ -3,6 +3,7 @@ package com.dyma.tennis.service;
 import com.dyma.tennis.Player;
 import com.dyma.tennis.PlayerToSave;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,6 +12,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -70,7 +73,19 @@ public class PlayerServiceIntegrationTest {
 
         // Then
         Assertions.assertThat(allPlayers)
-                .extracting("lastName")
-                .containsExactly("NadalTest", "FedererTest");
+                .extracting("lastName", "rank.position")
+                .containsExactly(Tuple.tuple("NadalTest", 1), Tuple.tuple("FedererTest", 2));
+    }
+
+    @Test
+    public void shouldFailToDeletePlayer_WhenPlayerDoesNotExist() {
+        // Given
+        String playerToDelete = "DoeTest";
+
+        // When / Then
+        Exception exception = assertThrows(PlayerNotFoundException.class, () -> {
+            playerService.delete(playerToDelete);
+        });
+        Assertions.assertThat(exception.getMessage()).isEqualTo("Player with last name DoeTest could not be found.");
     }
 }
